@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <ctype.h>
+#include <string.h>
 
 typedef struct
 {
@@ -10,22 +10,6 @@ typedef struct
 } Student;
 
 
-int main(){
-
-    FILE* fp;
-    fp = fopen("datoteka.txt", "r");
-
-    int numberOfStudents = readNumberOfStudents(fp);
-
-    Student* students = dynamicAllocation(numberOfStudents);
-    if(students == NULL) return -1;
-
-    studentsInput(fp, students);
-    studentsOutput(numberOfStudents, students);
-
-
-}
-
 int readNumberOfStudents(FILE* fp){
     
     if(fp == NULL){
@@ -33,20 +17,15 @@ int readNumberOfStudents(FILE* fp){
         return -1;
     }
 
-    int count;
-    int currentChar;
-    int lastChar;
+    int count = 0;
+    char name[50], surname[50];
+    int points;
 
-    while((currentChar = fgetc(fp)) != EOF){
-
-        if(isalpha(currentChar) && isdigit(lastChar)){
-            count++;
-        }
-
-        lastChar = currentChar;
+    while(fscanf(fp, "%49s %49s %d", name, surname, &points) == 3) {
+        count++;
     }
 
-    fp = fclose;
+    
     return count;
 
 }
@@ -62,39 +41,63 @@ Student* dynamicAllocation(int numberOfStudents){
     return students;    
 }
 
-void studentsInput(FILE* fp, Student* students){
+void studentsInput(FILE* fp, Student* students, int numberOfStudents){
     
-    int i;
-
-    while(fscanf(fp, "%s %s %d", students[i].Name, students[i].Surname, &students[i].Points) == 3){
-        i++;
+    for (int i = 0; i < numberOfStudents; i++) {
+        fscanf(fp, "%49s %49s %d", students[i].Name, students[i].Surname, &students[i].Points);
     }
+    
 }
 
-void studentsOutput(int numberOfStudents, Student* students){
-    int i;
-    int maxPoint = maxPoints(students, numberOfStudents);
 
-    for(int i=0; i<numberOfStudents; i++){
 
-        printf("%s %s %d", students[i].Name, students[i].Surname, relativePoints(&students[i].Points, maxPoint));
-    }
-}
-
-double relativePoints(int points, int maxPoints){
-    double relativePoints = (points/maxPoints)*100;
-    return relativePoints;
-}
 
 int maxPoints(Student* students, int numberOfStudents){
 
     int maxPoints = 0;
     for(int i=0;i<numberOfStudents; i++){
-        if(&students[i].Points> maxPoints){
-            maxPoints = &students[i].Points;
+        if(students[i].Points> maxPoints){
+            maxPoints = students[i].Points;
         }
     }
 
     return maxPoints;
 }
 
+double relativePoints(int points, int maxPoints){
+    return ((double)points / maxPoints) * 100;
+}
+
+
+void studentsOutput(int numberOfStudents, Student* students){
+    int i = 0;
+    int maxPoint = maxPoints(students, numberOfStudents);
+
+    for(int i=0; i<numberOfStudents; i++){
+
+        printf("%s %s %.2f\n", students[i].Name, students[i].Surname, relativePoints(students[i].Points, maxPoint));
+    }
+}
+
+
+int main(){
+
+    FILE* fp;
+    fp = fopen("datoteka.txt", "r");
+
+    int numberOfStudents = readNumberOfStudents(fp);
+
+    rewind(fp);
+
+    Student* students = dynamicAllocation(numberOfStudents);
+    if(students == NULL) return -1;
+
+    studentsInput(fp, students, numberOfStudents);
+    studentsOutput(numberOfStudents, students);
+
+    free(students);
+    fclose(fp);
+
+    return 0;
+
+}
